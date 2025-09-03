@@ -13,11 +13,9 @@ def write_temp_file(file_bytes, suffix=""):
     return path
 
 def remove_bg_video_bytes(video_bytes):
-    # Save input video to a temp file
     in_path = write_temp_file(video_bytes, suffix=".mp4")
     out_path = in_path.replace(".mp4", "_out.mp4")
 
-    # Open video
     cap = cv2.VideoCapture(in_path)
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -30,10 +28,8 @@ def remove_bg_video_bytes(video_bytes):
         if not ret:
             break
 
-        # Apply background removal per frame (returns RGBA)
         frame_no_bg = remove(frame)
 
-        # Convert RGBA → BGR so OpenCV can write it
         if frame_no_bg.shape[2] == 4:
             frame_no_bg = cv2.cvtColor(frame_no_bg, cv2.COLOR_BGRA2BGR)
 
@@ -42,11 +38,9 @@ def remove_bg_video_bytes(video_bytes):
     cap.release()
     out.release()
 
-    # Read result video as bytes
     with open(out_path, "rb") as f:
         result_bytes = f.read()
 
-    # Clean up
     os.remove(in_path)
     os.remove(out_path)
 

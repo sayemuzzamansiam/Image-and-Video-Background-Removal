@@ -17,8 +17,6 @@ async def remove_bg_video_endpoint(file: UploadFile = File(...)):
     contents = await file.read()
     out_bytes = remove_bg_video_bytes(contents)
 
-    # --- THIS IS THE LINE TO CHANGE ---
-    # We are adding the headers argument to suggest a filename
     headers = {
         'Content-Disposition': 'attachment; filename="processed_video.mp4"'
     }
