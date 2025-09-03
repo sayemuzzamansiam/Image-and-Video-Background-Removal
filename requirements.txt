@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+rembg
+opencv-python-headless
+numpy
+pydantic
+pytest
+python-multipart
+# Optional (for celery):
+celery
+redis
+onnxruntime==1.17.1
+numpy==1.26.4
