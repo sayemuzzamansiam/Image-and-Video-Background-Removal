@@ -6,7 +6,7 @@ from PIL import Image
 from io import BytesIO 
 
 
-FIXED_SIZE = (500, 500)
+FIXED_SIZE = (170, 170)
 
 def remove_bg_image(image_bytes: bytes) -> bytes:
     """Return PNG bytes with transparent background."""
