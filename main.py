@@ -1,7 +1,7 @@
 # app/main.py
 
 from fastapi import FastAPI
-from app.api.endpoints import health, image, video
+from app.api.endpoints import image, video
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -26,7 +26,7 @@ app.add_middleware(
 
 
 # Include routers for different API endpoints:
-app.include_router(health.router, prefix="/health")
+# app.include_router(health.router, prefix="/health")
 app.include_router(image.router, prefix="/remove-bg")
 app.include_router(video.router, prefix="/remove-bg")
 
@@ -38,4 +38,4 @@ async def root():
 # Run the application: change host and port as needed
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.122.0.0", port=7000)
+    uvicorn.run(app, host="127.122.0.0", port=7000, reload=True)
