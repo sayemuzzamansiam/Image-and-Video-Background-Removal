@@ -1,9 +1,12 @@
-# # app/core/config.py
+# app/core/config.py
 
-# from pydantic import BaseSettings
+from pydantic_settings import BaseSettings # <-- THE ONLY CHANGE NEEDED
 
-# class Settings(BaseSettings):
-#     redis_url: str = "redis://localhost:6379/0"
-#     debug: bool = True
-
-# settings = Settings()
+class Settings(BaseSettings): 
+    CLIPDROP_API_KEY: str
+    CLIPDROP_API_BASE_URL: str
+    
+    class Config: 
+        env_file = ".env"
+        
+settings = Settings()

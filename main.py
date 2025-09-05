@@ -1,7 +1,7 @@
 # app/main.py
 
 from fastapi import FastAPI
-from app.api.endpoints import image, video
+from app.api.endpoints import image, video, image_api
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -28,6 +28,7 @@ app.add_middleware(
 # Include routers for different API endpoints:
 # app.include_router(health.router, prefix="/health")
 app.include_router(image.router, prefix="/remove-bg")
+app.include_router(image_api.router, prefix="/api_remove-bg")
 app.include_router(video.router, prefix="/remove-bg")
 
 
