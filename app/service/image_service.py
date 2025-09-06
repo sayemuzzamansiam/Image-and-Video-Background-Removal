@@ -1,62 +1,62 @@
-# app/service/image_service.py
-
 from rembg import remove
-from PIL import Image
+from PIL import Image, ImageOps
 from io import BytesIO
 
-ID_CARD_SIZE = (300, 400)  # Custom size for ID card (width, height), adjustable as needed
+# Fixed output size for all images
+OUTPUT_SIZE = (170, 170)  # (width, height)
 
-def remove_bg_image(image_bytes: bytes) -> bytes:
-    """Return PNG bytes with transparent background and centered subject for ID card."""
-    # Remove background using rembg
-    output_bytes_with_bg_removed = remove(image_bytes)
+def resize_and_pad(image: Image.Image, size: tuple[int, int], color=(255, 255, 255)) -> Image.Image:
+    """Resize image with aspect ratio preserved and pad to fit desired size."""
+    image.thumbnail(size, Image.Resampling.LANCZOS)
+    delta_w = size[0] - image.width
+    delta_h = size[1] - image.height
+    padding = (delta_w // 2, delta_h // 2, delta_w - (delta_w // 2), delta_h - (delta_h // 2))
+    return ImageOps.expand(image, padding, fill=color)
 
-    # Open the image
-    img = Image.open(BytesIO(output_bytes_with_bg_removed))
-    if img.mode != 'RGBA':
-        img = img.convert('RGBA')  # Ensure RGBA for transparency
+def remove_bg_image_fixed_output(image_bytes: bytes) -> bytes:
+    from rembg import remove
+    from PIL import Image, ImageOps
+    from io import BytesIO
 
-    # Step 1: Get bounding box of non-transparent area (auto detection)
-    bbox = img.getbbox()  # Returns (left, upper, right, lower) or None if empty
+    OUTPUT_SIZE = (300, 400)
+
+    # Step 1: Open original image
+    img = Image.open(BytesIO(image_bytes)).convert('RGBA')
+
+    # Step 2: Resize and pad to fit OUTPUT_SIZE
+    img.thumbnail(OUTPUT_SIZE, Image.Resampling.LANCZOS)
+    delta_w = OUTPUT_SIZE[0] - img.width
+    delta_h = OUTPUT_SIZE[1] - img.height
+    padding = (delta_w // 2, delta_h // 2, delta_w - delta_w // 2, delta_h - delta_h // 2)
+    padded_img = ImageOps.expand(img, padding, fill=(255, 255, 255, 255))
+
+    # Step 3: Convert resized+padded image to bytes before passing to rembg
+    buffer = BytesIO()
+    padded_img.save(buffer, format="PNG")
+    resized_bytes = buffer.getvalue()
+
+    # Step 4: Remove background
+    output_bytes = remove(resized_bytes)
+
+    # Step 5: Load processed image
+    img_no_bg = Image.open(BytesIO(output_bytes)).convert('RGBA')
+
+    # Step 6: Crop subject
+    bbox = img_no_bg.getbbox()
     if not bbox:
         raise ValueError("No subject detected after background removal.")
+    subject = img_no_bg.crop(bbox)
 
-    # Step 2: Crop to the subject
-    subject = img.crop(bbox)
+    # Step 7: Resize subject to fit again
+    subject.thumbnail(OUTPUT_SIZE, Image.Resampling.LANCZOS)
 
-    # Step 3: Resize subject to fit within ID_CARD_SIZE, preserving aspect ratio
-    # Calculate the scaling factor to fit the larger dimension of the canvas
-    subject_ratio = subject.width / subject.height
-    canvas_ratio = ID_CARD_SIZE[0] / ID_CARD_SIZE[1]
-    if subject_ratio > canvas_ratio:
-        # Fit to width
-        scale = ID_CARD_SIZE[0] / subject.width
-    else:
-        # Fit to height
-        scale = ID_CARD_SIZE[1] / subject.height
-    new_width = int(subject.width * scale)
-    new_height = int(subject.height * scale)
-    subject_resized = subject.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    # Step 8: Paste on white background
+    canvas = Image.new('RGBA', OUTPUT_SIZE, (255, 255, 255, 255))
+    x_offset = (OUTPUT_SIZE[0] - subject.width) // 2
+    y_offset = (OUTPUT_SIZE[1] - subject.height) // 2
+    canvas.paste(subject, (x_offset, y_offset), subject)
 
-    # Debug: Print dimensions to verify
-    print(f"Original subject size: {subject.width}x{subject.height}")
-    print(f"Resized subject size: {subject_resized.width}x{subject_resized.height}")
-    print(f"Canvas size: {ID_CARD_SIZE[0]}x{ID_CARD_SIZE[1]}")
-    print(f"Calculated offsets: x={(ID_CARD_SIZE[0] - subject_resized.width) // 2}, y={(ID_CARD_SIZE[1] - subject_resized.height) // 2}")
-
-    # Step 4: Create a new canvas (white background for ID card)
-    canvas = Image.new('RGBA', ID_CARD_SIZE, (255, 255, 255, 255))  # White background
-
-    # Step 5: Calculate exact center position with padding
-    x_offset = (ID_CARD_SIZE[0] - subject_resized.width) // 2
-    y_offset = (ID_CARD_SIZE[1] - subject_resized.height) // 2
-
-    # Step 6: Paste subject onto canvas at the center
-    canvas.paste(subject_resized, (x_offset, y_offset), subject_resized)  # Use subject as mask for transparency
-
-    # Step 7: Save to bytes
-    out_buffer = BytesIO()
-    canvas.save(out_buffer, format="PNG")
-    final_bytes = out_buffer.getvalue()
-
-    return final_bytes
+    # Step 9: Return final image
+    output_buffer = BytesIO()
+    canvas.save(output_buffer, format="PNG")
+    return output_buffer.getvalue()
