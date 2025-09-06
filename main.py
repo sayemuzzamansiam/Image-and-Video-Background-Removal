@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
-from app.api.endpoints import image, video, img_slazzer  # Removed image_api (ClipDrop)
+from app.api.endpoints import image, video, img_slazzer  
 
 app = FastAPI(
     docs_url="/ui",
