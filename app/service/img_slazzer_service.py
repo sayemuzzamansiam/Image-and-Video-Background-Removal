@@ -5,7 +5,7 @@ from io import BytesIO
 from PIL import Image
 from app.core.config import settings
 
-ID_CARD_SIZE = (300, 400)  # Custom canvas size for ID card (width, height)
+ID_CARD_SIZE = (300, 400)  
 
 def remove_bg_and_center_with_slazzer(image_bytes: bytes) -> bytes:
     """Remove background using Slazzer API v2.0 and center subject on canvas."""
