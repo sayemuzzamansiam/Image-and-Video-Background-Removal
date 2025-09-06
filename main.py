@@ -25,9 +25,9 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(image.router, prefix="/remove-bg")  # Local model for images
-app.include_router(video.router, prefix="/remove-bg")  # Local model for videos
-app.include_router(img_slazzer.router, prefix="/remove-bg-api")  # Slazzer API integration
+app.include_router(image.router, prefix="/remove-bg")  
+app.include_router(video.router, prefix="/remove-bg") 
+app.include_router(img_slazzer.router, prefix="/remove-bg-api")  
 
 @app.get("/")
 async def root():
